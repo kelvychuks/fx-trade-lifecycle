@@ -1,0 +1,21 @@
+target/
+build/
+out/
+!.mvn/wrapper/maven-wrapper.jar
+
+# application.yaml IS committed: it holds no secrets, only env-var placeholders.
+application-local.yml
+application-local.yaml
+.env
+*.env
+
+.idea/
+*.iml
+.vscode/
+.settings/
+.classpath
+.project
+
+*.log
+logs/
+.DS_Store
