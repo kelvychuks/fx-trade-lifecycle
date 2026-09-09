@@ -17,21 +17,18 @@ import java.util.Map;
 import java.util.TreeMap;
 
 /**
- * Position keeping: what the desk is actually long and short.
- * <p>
- * Every FX trade moves two currencies in opposite directions, so a position is
- * built by walking the trades and adding both legs. Buying EURUSD 1m at 1.09
- * leaves the desk long 1,000,000 EUR and short 1,090,000 USD — and it is the
- * <em>net</em> across every pair touching a currency that matters, not the
- * per-pair view: a long EURUSD and a long USDJPY partly offset in dollars.
+ * Position keeping. Every FX trade moves two currencies in opposite directions,
+ * so a position is built by walking both legs of every trade: buying EURUSD 1m
+ * at 1.09 is long 1,000,000 EUR and short 1,090,000 USD. What matters is the
+ * net per currency across all pairs, since a long EURUSD and a long USDJPY
+ * partly offset in dollars.
  *
- * <p>Cancelled trades are excluded because they never existed. Settled trades
- * are excluded by default because the cash has already moved: they are history,
- * not exposure. Both choices are visible in the API rather than buried.
+ * <p>Cancelled trades are excluded. Settled ones are excluded by default: the
+ * cash has moved, so they are history rather than exposure.
  *
- * <p>The aggregation is a pure function over a list of trades, which keeps it
- * unit-testable without a database. A desk with millions of trades would push
- * this into SQL or a dedicated position store; at this size, clarity wins.
+ * <p>Aggregation is a pure function over a list of trades so it can be tested
+ * without a database. At millions of trades this would belong in SQL or a
+ * dedicated position store.
  */
 @Service
 @RequiredArgsConstructor
@@ -127,9 +124,9 @@ public class PositionService {
 
     /**
      * @param netAmount    positive is long, negative is short
-     * @param boughtAmount everything received in this currency
-     * @param soldAmount   everything paid away, as a positive number
-     * @param legs         how many trade legs touch this currency
+     * @param boughtAmount total received in this currency
+     * @param soldAmount   total paid away, as a positive number
+     * @param legs         trade legs touching this currency
      */
     public record CurrencyPosition(
             String currency,

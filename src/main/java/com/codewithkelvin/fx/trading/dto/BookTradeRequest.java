@@ -11,11 +11,9 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 
 /**
- * A booking ticket.
- * <p>
- * Only four things are required: what, which way, how much, and with whom.
- * Everything else has a market convention behind it — leave the tenor out and
- * you get spot, leave the rate out and you get the market rate.
+ * A booking ticket. Four things are required: what, which way, how much, with
+ * whom. The rest fall back on market convention: no tenor means spot, no rate
+ * means the market rate.
  */
 @Schema(description = "Booking ticket for an FX spot or forward trade")
 public record BookTradeRequest(

@@ -12,12 +12,9 @@ import java.util.Set;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * The value-date rules, tested against hand-built calendars.
- * <p>
- * These are the cases that actually go wrong in production: a spot date that
- * lands on a holiday in only one of the two currencies, a forward that would
- * roll into the following month, and the end-of-month rule that catches
- * everyone the first time they meet it.
+ * Value-date rules against hand-built calendars: a spot date landing on a
+ * holiday in only one of the two currencies, a forward that would roll into the
+ * next month, and the end-of-month rule.
  */
 class ValueDateCalculatorTest {
 
@@ -76,9 +73,8 @@ class ValueDateCalculatorTest {
 
             var spot = calculator.spotDate(TUESDAY, "EUR", "GBP", 2);
 
-            // EUR and GBP are both open on the 9th and 10th, so counting lands
-            // on Thursday the 10th — but that is a US holiday, and the dollar
-            // leg of the settlement chain has to clear, so it rolls to Friday.
+            // EUR and GBP are both open on the 9th and 10th, so counting lands on
+            // Thursday the 10th. That is a US holiday, so it rolls to Friday.
             assertThat(spot).isEqualTo(LocalDate.of(2026, 9, 11));
         }
 

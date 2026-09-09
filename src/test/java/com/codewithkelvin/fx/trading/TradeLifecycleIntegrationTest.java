@@ -30,9 +30,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
- * The lifecycle end to end, against a real database and through the real
- * service — including the authorisation rules, which are the part most likely
- * to be quietly broken by a refactor.
+ * The lifecycle end to end against a real database, including the authorisation
+ * rules, which are the part most easily broken by a refactor.
  */
 @SpringBootTest
 @Import(TestcontainersConfiguration.class)

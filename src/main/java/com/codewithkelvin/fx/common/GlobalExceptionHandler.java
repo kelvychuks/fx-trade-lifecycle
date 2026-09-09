@@ -21,10 +21,7 @@ public class GlobalExceptionHandler {
                 .body(ApiError.of("NOT_FOUND", ex.getMessage()));
     }
 
-    /**
-     * 422 rather than 400: the request parsed and validated fine, the desk just
-     * will not accept it. A client should show the message, not retry.
-     */
+    /** 422 rather than 400: it parsed fine, the desk just will not accept it. */
     @ExceptionHandler(BusinessRuleException.class)
     public ResponseEntity<ApiError> handleBusinessRule(BusinessRuleException ex) {
         return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
@@ -41,11 +38,7 @@ public class GlobalExceptionHandler {
                 .body(ApiError.of("VALIDATION_FAILED", "The request is not valid", fieldErrors));
     }
 
-    /**
-     * Two users acted on the same trade at once and the @Version check lost.
-     * 409 tells the client to re-read and try again — which is true here, unlike
-     * a business-rule rejection.
-     */
+    /** Two users hit the same trade at once and the @Version check lost. Retrying works here. */
     @ExceptionHandler(OptimisticLockingFailureException.class)
     public ResponseEntity<ApiError> handleConcurrentUpdate(OptimisticLockingFailureException ex) {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(ApiError.of(

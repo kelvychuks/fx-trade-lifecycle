@@ -11,23 +11,22 @@ book to market at the end of each day.
 
 **Live API:** <https://fx-trade-lifecycle.onrender.com> · **Swagger UI:** <https://fx-trade-lifecycle.onrender.com/swagger-ui/index.html> · **Blotter:** _coming soon_
 
-> Hosted on a free tier that sleeps when idle — the first request can take
-> 30–50 seconds while the instance wakes.
+> Hosted on a free tier that sleeps when idle, so the first request can take
+> 30-50 seconds while the instance wakes.
 
 ---
 
 ## Why this exists
 
-Most portfolio backends are a CRUD API with a different noun in front of it.
-This one is built around rules that are genuinely hard to get right and that
-only exist in a particular corner of finance: when money actually moves, what a
-forward is worth, who is allowed to approve what, and how to prove afterwards
-what happened.
+Most portfolio backends are a CRUD API with a different noun in front. This one
+is built around rules that are hard to get right and specific to one corner of
+finance: when money actually moves, what a forward is worth, who may approve
+what, and how to prove afterwards what happened.
 
 I work on [Calypso](https://www.nasdaq.com/solutions/calypso) implementations
-for banks — configuration, support, and custom Java development against a
+for banks: configuration, support, and custom Java development against a
 treasury platform. This is a small, self-contained take on the part of that
-world I find most interesting, built from scratch so the reasoning is visible.
+world I find most interesting, built from scratch.
 
 ## Sign in
 
@@ -55,29 +54,29 @@ trades spread across every lifecycle state, so the blotter is never empty.
                                        CANCELLED
 ```
 
-Every one of those arrows is checked in one place — `TradeStatus.canTransitionTo`
-— and every transition writes an append-only `trade_event` row saying who did
-it and when. Two rules people usually get wrong, both enforced here:
+Every one of those arrows is checked in one place, `TradeStatus.canTransitionTo`,
+and every transition writes an append-only `trade_event` row saying who did it
+and when. Two rules people usually get wrong, both enforced here:
 
 - **Amending a validated trade sends it back to CAPTURED.** The economics
-  changed, so the checks must run again. A trade must never carry a validation
-  that was performed against different terms.
+  changed, so the checks must run again. A trade should never carry a validation
+  performed against different terms.
 - **A confirmed trade can still be cancelled, right up until it settles.** A
-  settled one cannot — the cash has moved, and the correction for that is a new
-  offsetting trade, not an edit.
+  settled one cannot: the cash has moved, and the correction is a new offsetting
+  trade rather than an edit.
 
 ## What it actually does
 
-**Value dates.** The day the money moves is derived from a settlement calendar,
-not from "today plus two". Spot is the trade date plus the pair's lag, counting
-only days on which both currencies are open — and the result must also be a US
-business day, because the dollar leg of the settlement chain has to clear, even
-for a pair with no dollar in it. Forwards run from spot and are adjusted
-**Modified Following**: roll forward to the next open day unless that crosses
-into the next month, in which case roll back, so a three-month trade never
-quietly becomes a four-month one. And the **end-of-month rule**: if spot is the
-last business day of its month, every month-based forward lands on the last
-business day of its month. Spot 26 February plus one month is 31 March.
+**Value dates.** The day the money moves comes from a settlement calendar, not
+from "today plus two". Spot is the trade date plus the pair's lag, counting only
+days when both currencies are open, and the result must also be a US business
+day because the dollar leg of the settlement chain has to clear. Forwards run
+from spot and are adjusted **Modified Following**: roll forward to the next open
+day unless that crosses into the next month, in which case roll back, so a
+three-month trade does not become a four-month one. Then the **end-of-month
+rule**: if spot is the last business day of its month, month-based forwards land
+on the last business day of theirs. Spot 26 February plus one month is 31
+March.
 
 **Forward pricing.** Covered interest parity, not a forecast:
 
@@ -89,27 +88,27 @@ The currency with the higher interest rate trades at a forward discount. A
 dealer sees the result as points: "EURUSD 3M at 36.6".
 
 **Controls that reject trades.** An inactive counterparty, a notional over that
-counterparty's limit, a value date that is not a settlement day, and a manually
-dealt rate more than 5% from the market are all refusals, not warnings — an
-off-market rate is how a loss gets buried inside a trade.
+counterparty's limit, a value date that is not a settlement day, and a dealt rate
+more than 5% from the market are refusals rather than warnings. Off-market rates
+are how losses get buried inside trades.
 
 **Four-eyes.** The person who books a trade cannot confirm it, checked in the
-service rather than assumed of the UI. Roles alone mostly prevent this; the
-check catches the case roles miss, where someone books a trade and moves to
-middle office before it is confirmed.
+service rather than assumed of the UI. Roles mostly prevent this already; the
+check catches someone who books a trade and moves to middle office before it is
+confirmed.
 
 **Idempotent booking.** A booking request may carry an `externalRef`. Replaying
-it — flaky network, impatient click — returns the original trade instead of
-booking a second one.
+it (flaky network, impatient click) returns the original trade instead of booking
+a second.
 
 **Positions.** Every trade moves two currencies in opposite directions, so
 positions are built by walking both legs of every live trade. What matters is
 the net per currency across all pairs: a long EURUSD and a long USDJPY partly
 offset in dollars.
 
-**End-of-day mark-to-market.** For each live trade, what would it cost to close
-out today? That means comparing against the market rate *for the trade's own
-value date*, not today's spot, and discounting the result back:
+**End-of-day mark-to-market.** For each live trade: what would it cost to close
+out today? The comparison is against the market rate for the trade's own value
+date, not today's spot, and the result is discounted back:
 
 ```
 MTM = direction x notional x (market rate - dealt rate)
@@ -117,7 +116,7 @@ PV  = MTM x discount factor to the value date
 ```
 
 An unrealised gain landing in six months is not worth its face value now, and a
-P&L that says otherwise overstates the desk.
+P&L that ignores this overstates the desk.
 
 ## Architecture
 
@@ -145,9 +144,9 @@ P&L that says otherwise overstates the desk.
                     PostgreSQL (Flyway)
 ```
 
-The domain logic that is worth testing — value dates and pricing — is in plain
-Java classes with no Spring or JPA in them, so every market convention is a unit
-test that runs in milliseconds against a hand-built calendar. Services are the
+The domain logic worth testing, value dates and pricing, sits in plain Java
+classes with no Spring or JPA in them, so every market convention is a unit test
+that runs in milliseconds against a hand-built calendar. Services are the
 thin layer that feeds them from the database.
 
 ## Glossary
@@ -162,17 +161,16 @@ thin layer that feeds them from the database.
 | **Pip** | The smallest quoted increment: the fourth decimal for most pairs, the second for yen pairs. |
 | **Notional** | The base-currency amount of the trade. |
 | **Counter amount** | The other side: notional × rate, in the quote currency. |
-| **Broken date** | A value date that is not a standard tenor. Legitimate, and still has to be a settlement day. |
+| **Broken date** | A value date that is not a standard tenor. Legitimate, but still has to be a settlement day. |
 | **MTM** | Mark to market: what the trade is worth now versus what it was dealt at. |
 | **Four-eyes** | Two different people must be involved: one books, another confirms. |
 
 ## Design decisions
 
-**Money is `BigDecimal` with an explicit scale and rounding mode, everywhere.**
-Rates carry 8 decimals in the database, amounts carry the quote currency's minor
-units (2 for dollars, 0 for yen). `double` cannot represent `0.10`, and an FX
-desk that is a hundredth of a cent out per trade has a reconciliation problem by
-Friday.
+**Money is `BigDecimal` with an explicit scale and rounding mode.** Rates carry
+8 decimals in the database, amounts carry the quote currency's minor units (2 for
+dollars, 0 for yen). `double` cannot represent `0.10`, and a desk that is a
+hundredth of a cent out per trade has a reconciliation problem by Friday.
 
 **One gate for state changes.** Nothing sets `status` directly; everything goes
 through `TradeService.transition`, which checks the state machine and writes the
@@ -182,25 +180,25 @@ audit event. Making an illegal transition would take deliberate effort.
 deletes a `trade_event`. Gaps in the sequence would mean something was removed,
 which is exactly what an auditor looks for.
 
-**Authorisation sits next to the rule.** `@PreAuthorize` on the service method,
-not a URL pattern in a config class three packages away — so the rule and its
-guard get read, and changed, together.
+**Authorisation sits next to the rule.** `@PreAuthorize` on the service method
+rather than a URL pattern in a config class three packages away, so the rule and
+its guard are read and changed together.
 
 **Optimistic locking on trades.** Two people acting on the same trade at once is
-not hypothetical on a desk. The second one gets a 409 telling them to reload,
-rather than silently overwriting the first.
+routine on a desk. The second gets a 409 telling them to reload rather than
+overwriting the first.
 
 **Blotter filtering uses Specifications.** Every filter is optional; composing
 predicates beats one JPQL query with six `(:param is null or ...)` branches the
 database has to plan around.
 
 **Seed data goes through the real service.** The demo book is booked, validated
-and confirmed through `TradeService`, obeying every rule the API obeys — so
-seeding doubles as a smoke test of the whole booking path on each fresh deploy.
+and confirmed through `TradeService` under the same rules the API enforces, so
+seeding doubles as a smoke test of the booking path on each deploy.
 
-## What is deliberately simplified
+## Known simplifications
 
-Being explicit about this matters more than pretending otherwise:
+Where this differs from a production system:
 
 - **One rate per currency, not a curve.** Real pricing uses a term structure of
   interest rates, not a single deposit rate per currency.
@@ -210,9 +208,8 @@ Being explicit about this matters more than pretending otherwise:
   the position would be closed, and carries a spread.
 - **No netting or settlement instructions.** Real settlement nets payments per
   counterparty per currency per day and routes them through SSIs.
-- **Valuations are not converted to a single reporting currency.** Adding
-  dollars to yen is how a P&L report starts lying, so the summary keeps them
-  apart.
+- **Valuations are not converted to a single reporting currency.** The summary
+  keeps currencies apart; converting them needs its own rates.
 - **The scheduled valuation assumes one instance.** With replicas it needs a
   lock (ShedLock, or a row in the database).
 
@@ -227,7 +224,7 @@ docker compose up --build
 API on <http://localhost:8080>, Swagger UI on
 <http://localhost:8080/swagger-ui/index.html>, database migrated and seeded.
 
-**Without Docker** — a JDK 17 and any reachable PostgreSQL, including a free
+**Without Docker.** A JDK 17 and any reachable PostgreSQL, including a free
 hosted one:
 
 ```bash
@@ -243,10 +240,10 @@ export DATABASE_PASSWORD=<password>
 ./mvnw verify
 ```
 
-Unit tests — the value-date rules, the pricing maths, the state machine,
-position aggregation — run anywhere. The integration tests start their own
-PostgreSQL through Testcontainers and skip themselves when no Docker daemon is
-present, so this passes on a JDK-only machine and runs in full in CI.
+Unit tests (value dates, pricing, the state machine, position aggregation) run
+anywhere. The integration tests start their own PostgreSQL through Testcontainers
+and skip themselves when no Docker daemon is present, so this passes on a
+JDK-only machine and runs in full in CI.
 
 ## API tour
 

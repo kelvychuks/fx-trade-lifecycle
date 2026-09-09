@@ -20,11 +20,9 @@ import lombok.Setter;
 import java.time.Instant;
 
 /**
- * One entry in a trade's audit trail.
- * <p>
- * Append-only by contract: nothing in this codebase updates or deletes a
- * TradeEvent. The status on the trade is a convenience — this table is the
- * record of what happened, and it is the first thing an auditor asks for.
+ * One entry in a trade's audit trail. Append-only by contract: nothing in this
+ * codebase updates or deletes a TradeEvent. The status column on the trade is a
+ * cache; this table is the record of what happened.
  */
 @Entity
 @Table(name = "trade_event")

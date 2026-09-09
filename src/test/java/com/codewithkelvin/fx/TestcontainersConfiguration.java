@@ -6,10 +6,9 @@ import org.springframework.context.annotation.Bean;
 import org.testcontainers.containers.PostgreSQLContainer;
 
 /**
- * Integration tests run against real PostgreSQL rather than an in-memory
- * database. Half the value of these tests is proving the Flyway migrations
- * apply and the entities match the schema they produce — H2 would happily
- * accept DDL that PostgreSQL rejects, which is the opposite of useful.
+ * Integration tests run against real PostgreSQL. Half their value is proving the
+ * Flyway migrations apply and the entities still match the schema they produce,
+ * and H2 will happily accept DDL that PostgreSQL rejects.
  */
 @TestConfiguration(proxyBeanMethods = false)
 public class TestcontainersConfiguration {

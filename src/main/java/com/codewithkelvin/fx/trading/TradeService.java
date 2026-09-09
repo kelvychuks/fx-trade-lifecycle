@@ -31,20 +31,10 @@ import java.util.List;
 
 /**
  * Everything a trade can have done to it.
- * <p>
- * Three ideas hold this class together:
- * <ul>
- *   <li><b>One gate for every state change.</b> Nothing sets {@code status}
- *       directly; every change goes through {@link #transition}, which checks
- *       {@link TradeStatus#canTransitionTo} and writes an audit event. An
- *       illegal transition is impossible to perform by accident.</li>
- *   <li><b>Rules where the rule lives.</b> Who may do what is a
- *       {@code @PreAuthorize} on the method it protects, not a URL pattern in a
- *       config class far away.</li>
- *   <li><b>Validation is re-run after amendment.</b> Changing the economics of
- *       a validated trade drops it back to CAPTURED, because a validation
- *       performed against different terms is worthless.</li>
- * </ul>
+ *
+ * <p>Nothing sets {@code status} directly. Every change goes through
+ * {@link #transition}, which checks the state machine and writes an audit
+ * event, so an illegal transition cannot happen by accident.
  */
 @Slf4j
 @Service
@@ -59,9 +49,8 @@ public class TradeService {
     private final CurrentUserService currentUserService;
 
     /**
-     * How far a manually entered rate may sit from the market before the desk
-     * refuses it. An off-market rate is how a loss gets hidden inside a trade,
-     * so it is a rejection, not a warning.
+     * Tolerance for a manually entered rate against the market. Off-market rates
+     * are how losses get hidden inside trades, so this is a rejection, not a warning.
      */
     @Value("${app.trading.off-market-tolerance:0.05}")
     private BigDecimal offMarketTolerance;
@@ -107,8 +96,7 @@ public class TradeService {
     @Transactional
     @PreAuthorize("hasRole('TRADER')")
     public Trade book(BookTradeRequest request) {
-        // Idempotency first: a retried request returns the original trade
-        // rather than booking a second one.
+        // Retried request returns the original trade instead of booking a second.
         if (request.externalRef() != null && !request.externalRef().isBlank()) {
             var existing = tradeRepository.findByExternalRef(request.externalRef());
             if (existing.isPresent()) {
@@ -167,9 +155,8 @@ public class TradeService {
     // ------------------------------------------------------------------
 
     /**
-     * Middle office checks the trade against the desk's rules. Everything that
-     * could have gone stale between capture and now is re-checked: a
-     * counterparty can be suspended in the minutes after a trade is booked.
+     * Re-checks everything that could have gone stale since capture. A
+     * counterparty can be suspended minutes after a trade is booked.
      */
     @Transactional
     @PreAuthorize("hasRole('MIDDLE_OFFICE')")
@@ -197,9 +184,9 @@ public class TradeService {
     }
 
     /**
-     * Four-eyes: whoever booked the trade cannot be the one who confirms it.
-     * This is the whole reason the roles exist, so it is enforced here rather
-     * than assumed of the user interface.
+     * Four-eyes: whoever booked the trade cannot confirm it. Roles usually
+     * prevent this already; the check catches someone who booked a trade and
+     * moved to middle office before it was confirmed.
      */
     @Transactional
     @PreAuthorize("hasRole('MIDDLE_OFFICE')")
@@ -217,7 +204,7 @@ public class TradeService {
                 "Confirmed with " + trade.getCounterparty().getName());
     }
 
-    /** Settlement is a fact about a date, not a decision. */
+    /** Settlement depends on the date, not on anyone's judgement. */
     @Transactional
     @PreAuthorize("hasRole('MIDDLE_OFFICE')")
     public Trade settle(String tradeRef) {
@@ -250,10 +237,7 @@ public class TradeService {
         return transition(trade, TradeEventType.CANCEL, TradeStatus.CANCELLED, actor, reason);
     }
 
-    /**
-     * Amendment re-prices and re-dates the trade, then sends it back to
-     * CAPTURED so validation runs again against the new terms.
-     */
+    /** Re-prices and re-dates, then returns the trade to CAPTURED for re-validation. */
     @Transactional
     @PreAuthorize("hasRole('TRADER')")
     public Trade amend(String tradeRef, AmendTradeRequest request) {
@@ -284,8 +268,8 @@ public class TradeService {
                     ? Product.SPOT : Product.FORWARD);
         }
 
-        // Re-price against the market as of the original trade date: an
-        // amendment corrects a booking, it does not re-trade at today's rate.
+        // Price as of the original trade date. An amendment corrects a booking;
+        // it does not re-trade at today's rate.
         var marketRate = pricingService.rateFor(trade.getPair(), trade.getTradeDate(),
                 trade.getValueDate());
         trade.setRate(resolveRate(request.rate(), marketRate, trade.getPair()));
@@ -298,14 +282,14 @@ public class TradeService {
 
         return transition(trade, TradeEventType.AMEND, TradeStatus.CAPTURED, actor,
                 "Amended from [" + before + "] to [" + after + "]"
-                        + (request.reason() == null ? "" : " — " + request.reason()));
+                        + (request.reason() == null ? "" : ". " + request.reason()));
     }
 
     // ------------------------------------------------------------------
     // Internals
     // ------------------------------------------------------------------
 
-    /** The single gate. Every status change in the system passes through here. */
+    /** Every status change in the system passes through here. */
     private Trade transition(Trade trade, TradeEventType eventType, TradeStatus target,
                              AppUser actor, String detail) {
         var current = trade.getStatus();
@@ -341,8 +325,8 @@ public class TradeService {
             return pricingService.valueDate(pair, tradeDate, tenor);
         }
 
-        // A "broken date" — any date the client asks for that is not a standard
-        // tenor. Legitimate, and still has to be a day the money can move.
+        // Broken date: any non-standard tenor date. Legitimate, but still has to
+        // be a day the money can actually move.
         if (!pricingService.isSettlementDay(pair, requested)) {
             throw new BusinessRuleException("BAD_VALUE_DATE",
                     requested + " is a weekend or a holiday for " + pair.getSymbol());

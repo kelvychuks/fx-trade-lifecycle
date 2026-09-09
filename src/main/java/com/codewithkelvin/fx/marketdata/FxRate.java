@@ -18,9 +18,9 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 
 /**
- * One day's market snapshot for one pair: the spot mid and the two deposit
- * rates a forward is priced from. Deposit rates live here rather than on the
- * currency because they move daily — they are market data, not reference data.
+ * One day's snapshot for one pair: spot mid plus the two deposit rates a forward
+ * is priced from. The deposit rates live here rather than on the currency
+ * because they move daily, which makes them market data, not reference data.
  */
 @Entity
 @Table(name = "fx_rate")

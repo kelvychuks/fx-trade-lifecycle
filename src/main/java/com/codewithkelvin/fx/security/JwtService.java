@@ -34,9 +34,8 @@ public class JwtService {
     }
 
     /**
-     * Returns empty rather than throwing for any invalid token — expired, wrong
-     * signature, malformed. The filter treats all three the same way: the
-     * request is simply not authenticated.
+     * Empty rather than an exception for any invalid token: expired, wrong
+     * signature, malformed. The filter treats all three the same way.
      */
     public Optional<AuthenticatedUser> verify(String token) {
         try {

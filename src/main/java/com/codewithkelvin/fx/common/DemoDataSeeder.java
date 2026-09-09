@@ -33,17 +33,14 @@ import java.util.Map;
 import java.util.Random;
 
 /**
- * Fills an empty database with a desk that looks like it has been running for a
- * fortnight: users, two weeks of market data, and a spread of trades across
- * every lifecycle state.
- * <p>
- * Two decisions worth explaining. First, market data is generated <em>relative
- * to today</em> rather than pinned to fixed dates in a migration, so the hosted
- * demo still shows a live blotter a year from now instead of an empty one.
- * Second, trades are booked through {@link TradeService} rather than inserted
- * straight into the tables — the seed data therefore obeys every rule the API
- * obeys, including four-eyes confirmation, and seeding doubles as a smoke test
- * of the whole booking path on every fresh deploy.
+ * Fills an empty database with users, a fortnight of market data and a book of
+ * trades across every lifecycle state.
+ *
+ * <p>Market data is generated relative to today rather than pinned to fixed
+ * dates in a migration, so the hosted demo still has a live-looking blotter in
+ * a year's time. Trades go through {@link TradeService} rather than straight
+ * into the tables, so the seed obeys the same rules the API does and doubles as
+ * a smoke test of the booking path on each deploy.
  */
 @Slf4j
 @Order(1)
@@ -91,7 +88,7 @@ public class DemoDataSeeder implements ApplicationRunner {
     private final TradeRepository tradeRepository;
     private final ValuationService valuationService;
 
-    /** Fixed seed: the demo looks the same on every deploy, which makes it debuggable. */
+    /** Fixed seed so the demo is reproducible across deploys. */
     private final Random random = new Random(20260908L);
 
     @Override
@@ -138,11 +135,7 @@ public class DemoDataSeeder implements ApplicationRunner {
         log.info("Seeded demo user {} ({})", username, role);
     }
 
-    /**
-     * Fifteen business days of history, walking each spot by up to +/-0.35% a
-     * day. Enough movement that marks are not all zero, not so much that the
-     * numbers look absurd.
-     */
+    /** Walks each spot by up to +/-0.35% a day: enough movement that marks are not all zero. */
     private void seedMarketData(LocalDate today) {
         var pairs = pairRepository.findByActiveTrueOrderBySymbol();
 
@@ -228,10 +221,7 @@ public class DemoDataSeeder implements ApplicationRunner {
         }
     }
 
-    /**
-     * Booking runs through the real service, which enforces roles — so the
-     * seeder authenticates as the user whose job each step is.
-     */
+    /** The service enforces roles, so the seeder authenticates per step. */
     private void actAs(String username, UserRole role) {
         var authentication = new UsernamePasswordAuthenticationToken(
                 username, null, List.of(new SimpleGrantedAuthority("ROLE_" + role.name())));

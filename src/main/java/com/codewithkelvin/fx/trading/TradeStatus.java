@@ -1,23 +1,22 @@
 package com.codewithkelvin.fx.trading;
 
 /**
- * The trade lifecycle, and the only place that says which move follows which.
- * <p>
+ * The lifecycle, and the only place that defines which move follows which.
+ *
  * <pre>
- *   CAPTURED ──validate──▶ VALIDATED ──confirm──▶ CONFIRMED ──settle──▶ SETTLED
- *      │  ▲                   │  │                    │
- *      │  └────── amend ──────┘  │                    │
- *      └──────── cancel ─────────┴──── cancel ────────┘
+ *   CAPTURED --validate--> VALIDATED --confirm--> CONFIRMED --settle--> SETTLED
+ *      ^                       |                      |
+ *      +-------- amend --------+                      |
+ *      +-------- cancel -------+------ cancel --------+
  * </pre>
  *
- * Two rules worth stating out loud, because they are the ones people get wrong:
+ * Two rules that are easy to get wrong:
  * <ul>
- *   <li>Amending a validated trade sends it back to CAPTURED. The economics
- *       changed, so the checks have to run again — a trade must never carry a
- *       validation that was performed against different terms.</li>
- *   <li>A CONFIRMED trade can still be cancelled, by agreement, right up until
- *       it settles. A SETTLED trade cannot: the money has moved, and the
- *       correction for that is a new offsetting trade, not an edit.</li>
+ *   <li>Amending a validated trade returns it to CAPTURED. The economics
+ *       changed, so validation has to run again against the new terms.</li>
+ *   <li>A CONFIRMED trade can still be cancelled by agreement until it settles.
+ *       A SETTLED one cannot: the cash has moved, and the correction is a new
+ *       offsetting trade.</li>
  * </ul>
  */
 public enum TradeStatus {
@@ -37,15 +36,12 @@ public enum TradeStatus {
         };
     }
 
-    /** Nothing further can happen to the trade. */
+    /** Nothing further can happen to it. */
     public boolean isTerminal() {
         return this == SETTLED || this == CANCELLED;
     }
 
-    /**
-     * The trade still carries FX risk: it exists and has not settled or been
-     * cancelled. This is the set that feeds position keeping and revaluation.
-     */
+    /** Still carries FX risk. This is the set that feeds positions and revaluation. */
     public boolean isLive() {
         return this == CAPTURED || this == VALIDATED || this == CONFIRMED;
     }

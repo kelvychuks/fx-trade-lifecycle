@@ -2,22 +2,21 @@
 -- FX trade lifecycle: baseline schema.
 --
 -- Shape notes:
---  * Money is numeric, never floating point. Amounts carry 2 decimal places,
---    FX rates 8 — USD/JPY quotes to 3 and EUR/USD to 5, and forward points add
---    precision below that, so 8 leaves headroom without pretending to more.
+--  * Money is numeric, never floating point. Amounts carry 2 decimal places and
+--    FX rates 8. USD/JPY quotes to 3 and EUR/USD to 5; forward points add
+--    precision below that, so 8 leaves headroom.
 --  * trade_event is append-only. Nothing in the application updates or deletes
 --    a row in it; the current status on `trade` is a cache of the last event.
 --  * Every business identifier a human quotes (trade_ref, counterparty code,
 --    pair symbol) is unique in the database, not just in application code.
---  * Currency codes are varchar(3), not char(3). char is tempting for a fixed
---    three-letter code, but PostgreSQL reports it as bpchar, which Hibernate's
---    schema validator refuses against a String field — and char's blank-padding
---    semantics are a trap in comparisons anyway.
---  * Timestamps are timestamptz. These columns hold instants — the moment a
---    trade was captured — and an instant without a time zone is ambiguous the
---    moment the service runs anywhere but one machine. Dates that are dates
---    (trade_date, value_date) stay plain `date`: a value date is 12 March, not
---    a moment.
+--  * Currency codes are varchar(3), not char(3). PostgreSQL reports char as
+--    bpchar, which Hibernate's schema validator refuses against a String field,
+--    and char's blank-padding semantics are a trap in comparisons anyway.
+--  * Timestamps are timestamptz. These columns hold instants (the moment a trade
+--    was captured), and an instant without a time zone is ambiguous as soon as
+--    the service runs on more than one machine. Columns that are genuinely dates
+--    (trade_date, value_date) stay plain `date`: a value date is 12 March, not a
+--    moment.
 -- ---------------------------------------------------------------------------
 
 -- --- users -----------------------------------------------------------------

@@ -1,11 +1,9 @@
 package com.codewithkelvin.fx.security;
 
 /**
- * Segregation of duties, as a type.
- * <p>
- * A trading desk does not let the person who books a trade also confirm it —
- * that separation is what stops a bad trade being papered over by the person
- * who made it. Here the rule lives in the domain, not in the UI.
+ * Segregation of duties. A desk does not let the person who books a trade also
+ * confirm it; that separation is what stops a bad trade being papered over by
+ * whoever made it.
  */
 public enum UserRole {
 

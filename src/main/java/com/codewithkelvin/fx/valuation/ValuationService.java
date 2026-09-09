@@ -21,27 +21,18 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * End-of-day mark-to-market.
- * <p>
- * For each live trade, the question is: what would it cost to close this out
- * today? That is the difference between the rate the trade was dealt at and the
- * rate the market offers now <em>for the same value date</em> — not today's
- * spot. A three-month forward is compared with a three-month forward.
+ * End-of-day mark-to-market: what would it cost to close each live trade out
+ * today? The comparison is against the market rate for the trade's own value
+ * date, not today's spot, so a three-month forward is marked against a
+ * three-month forward.
  *
  * <pre>
  *   MTM = direction x notional x (market rate - dealt rate)    [quote currency]
  *   PV  = MTM x discount factor to the value date
  * </pre>
  *
- * The discounting matters: an unrealised gain that only lands in six months is
- * not worth its face value today, and a P&amp;L report that says otherwise is
- * overstating the desk's position.
- *
- * <p><b>What this is not.</b> A production revaluation values against bid or
- * offer rather than mid depending on which way the position would be closed,
- * discounts on a proper curve rather than a single deposit rate, and converts
- * every currency into one reporting currency. Those are known, deliberate
- * omissions, not oversights.
+ * <p>Simplifications: mid rates rather than bid/offer, a single deposit rate
+ * rather than a discount curve, and no conversion into a reporting currency.
  */
 @Slf4j
 @Service
@@ -66,9 +57,7 @@ public class ValuationService {
                 valuationRepository.save(value(trade, valuationDate));
                 priced++;
             } catch (RuntimeException ex) {
-                // One pair with no market data must not abort the whole run.
-                // The desk needs the marks it can produce, plus a list of what
-                // it could not.
+                // One pair missing market data must not abort the whole run.
                 log.warn("Could not value {}: {}", trade.getTradeRef(), ex.getMessage());
                 skipped.add(trade.getTradeRef() + ": " + ex.getMessage());
             }
@@ -84,8 +73,8 @@ public class ValuationService {
         var pair = trade.getPair();
         var market = marketDataService.requireRate(pair, valuationDate);
 
-        // Past its value date and still unsettled: there are no forward points
-        // left to earn, so it marks against spot with no discounting.
+        // Past value date and unsettled: no forward points left, so mark against
+        // spot with no discounting.
         var matured = trade.isMatured(valuationDate);
 
         var marketRate = matured
@@ -127,7 +116,7 @@ public class ValuationService {
         return valuationRepository.findByValuationDateOrderByTradeTradeRef(date);
     }
 
-    /** Totals by quote currency: the desk's unrealised P&amp;L for the day. */
+    /** Unrealised P&amp;L for the day, totalled by quote currency. */
     @Transactional(readOnly = true)
     public PnlSummary summary(LocalDate date) {
         var valuations = valuationsOn(date);
@@ -150,9 +139,8 @@ public class ValuationService {
     }
 
     /**
-     * Deliberately not summed into one number: adding dollars to yen is how a
-     * P&amp;L report starts lying. Converting to a reporting currency is a
-     * separate decision that needs its own rates.
+     * Not summed into a single number. Converting to a reporting currency needs
+     * its own rates and is a separate decision.
      */
     public record PnlSummary(LocalDate valuationDate, int valuations,
                              Map<String, BigDecimal> presentValueByCurrency,

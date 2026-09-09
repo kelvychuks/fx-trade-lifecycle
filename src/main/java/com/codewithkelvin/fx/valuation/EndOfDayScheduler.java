@@ -10,11 +10,9 @@ import java.time.LocalDate;
 
 /**
  * Runs the valuation after the New York close.
- * <p>
- * Single-instance only: with two replicas both would run it. The fix in a real
- * deployment is a lock the instances contend for (ShedLock, or a row in the
- * database) — noted here because "it worked on one instance" is exactly the
- * kind of thing that breaks quietly on the day you scale out.
+ *
+ * <p>Single-instance only. With two replicas both would run it; that needs a
+ * lock the instances contend for, such as ShedLock or a row in the database.
  */
 @Slf4j
 @Component

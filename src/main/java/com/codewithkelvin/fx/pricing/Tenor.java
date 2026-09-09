@@ -6,8 +6,8 @@ import java.time.Period;
 import java.util.Arrays;
 
 /**
- * Standard FX tenors, measured from the spot date rather than the trade date —
- * a "1M" forward matures one month after spot, not one month after today.
+ * Standard FX tenors, measured from spot rather than the trade date. A 1M
+ * forward matures one month after spot, not one month after today.
  */
 public enum Tenor {
 
@@ -40,10 +40,7 @@ public enum Tenor {
         return period;
     }
 
-    /**
-     * Month-based tenors follow the end-of-month rule; week-based ones never do.
-     * Spot plus one month from 28 February is 31 March, not 28 March.
-     */
+    /** Month tenors follow the end-of-month rule; week tenors never do. */
     public boolean isMonthBased() {
         return monthBased;
     }

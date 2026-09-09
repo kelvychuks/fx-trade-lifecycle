@@ -33,7 +33,7 @@ public class OpenApiConfig {
 
                                 then paste the token into **Authorize**.
 
-                                A trader cannot confirm a trade they booked themselves — that is the \
+                                A trader cannot confirm a trade they booked themselves: that is the \
                                 four-eyes rule, and it is enforced in the service, not the UI.
                                 """))
                 .addSecurityItem(new SecurityRequirement().addList(BEARER))

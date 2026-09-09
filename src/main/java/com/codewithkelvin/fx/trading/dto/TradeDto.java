@@ -12,8 +12,8 @@ import java.time.LocalDate;
 import java.util.List;
 
 /**
- * What a blotter row needs. Deliberately flat and denormalised — a dealer's
- * screen wants "EURUSD" and "MERIDIAN", not nested objects to drill into.
+ * What a blotter row needs: flat and denormalised, because a dealer's screen
+ * wants "EURUSD" and "MERIDIAN", not nested objects to drill into.
  */
 public record TradeDto(
         String tradeRef,

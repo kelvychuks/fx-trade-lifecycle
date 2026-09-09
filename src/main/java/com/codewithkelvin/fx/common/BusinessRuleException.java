@@ -1,9 +1,9 @@
 package com.codewithkelvin.fx.common;
 
 /**
- * The request was well formed but the desk's rules refuse it — an inactive
- * counterparty, a notional over the limit, a lifecycle transition that is not
- * allowed. Maps to 422, because retrying the same request will not help.
+ * The request was well formed but the desk's rules refuse it: inactive
+ * counterparty, notional over the limit, illegal lifecycle transition. Maps to
+ * 422, since retrying the same request will not help.
  */
 public class BusinessRuleException extends RuntimeException {
 

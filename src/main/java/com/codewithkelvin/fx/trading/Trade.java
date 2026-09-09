@@ -42,8 +42,8 @@ public class Trade {
     private String tradeRef;
 
     /**
-     * Caller-supplied idempotency key. Unique, so a retried booking request —
-     * a flaky network, an impatient click — cannot create a second trade.
+     * Caller-supplied idempotency key, unique in the database. A retried booking
+     * request (flaky network, impatient click) cannot create a second trade.
      */
     @Column(name = "external_ref")
     private String externalRef;
@@ -112,9 +112,8 @@ public class Trade {
     private Instant updatedAt = Instant.now();
 
     /**
-     * Optimistic locking. Two people acting on the same trade at the same moment
-     * is not hypothetical on a desk; the second one gets a 409 instead of
-     * silently overwriting the first.
+     * Optimistic locking. Two people acting on the same trade at once is routine
+     * on a desk; the second gets a 409 rather than overwriting the first.
      */
     @Version
     @Column(name = "version", nullable = false)
