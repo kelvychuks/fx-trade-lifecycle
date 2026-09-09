@@ -9,7 +9,7 @@ A back-office system for a foreign exchange desk: capture spot and forward
 trades, move them through a controlled lifecycle, keep positions, and mark the
 book to market at the end of each day.
 
-**Live API:** _<add your Render URL>_ · **Swagger UI:** _<url>/swagger-ui.html_ · **Blotter:** _<add your Vercel URL>_
+**Live API:** <https://fx-trade-lifecycle.onrender.com> · **Swagger UI:** <https://fx-trade-lifecycle.onrender.com/swagger-ui/index.html> · **Blotter:** _coming soon_
 
 > Hosted on a free tier that sleeps when idle — the first request can take
 > 30–50 seconds while the instance wakes.
@@ -225,7 +225,7 @@ docker compose up --build
 ```
 
 API on <http://localhost:8080>, Swagger UI on
-<http://localhost:8080/swagger-ui.html>, database migrated and seeded.
+<http://localhost:8080/swagger-ui/index.html>, database migrated and seeded.
 
 **Without Docker** — a JDK 17 and any reachable PostgreSQL, including a free
 hosted one:
