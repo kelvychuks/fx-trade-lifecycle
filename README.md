@@ -9,7 +9,7 @@ A back-office system for a foreign exchange desk: capture spot and forward
 trades, move them through a controlled lifecycle, keep positions, and mark the
 book to market at the end of each day.
 
-**Live API:** <https://fx-trade-lifecycle.onrender.com> · **Swagger UI:** <https://fx-trade-lifecycle.onrender.com/swagger-ui/index.html> · **Blotter:** _coming soon_
+**Live API:** <https://fx-trade-lifecycle.onrender.com> · **Swagger UI:** <https://fx-trade-lifecycle.onrender.com/swagger-ui/index.html> · **Blotter:** <https://fx-blotter-rosy.vercel.app>
 
 > Hosted on a free tier that sleeps when idle, so the first request can take
 > 30-50 seconds while the instance wakes.
